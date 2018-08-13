@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd">
+	<!-- 
+		AOP 를 사용하기 위해서 해당 설정 파일을 생성 할때  xmlns:aop 네임 스페이스가 필요하므로 추가한다 
+		미리 생성후 하단의 네임스페이스 탭을 이용해도 된다. 
+	-->
+	
+	<!-- 공통기능 을 수행할 클래스를 정의후 빈을 생성함.  -->
+	<bean id="commonAOP" class="aop.CommonAOP1"></bean> 
+	
+	<!-- 공통기능 설정 : 위에서 생성한 commonAOP 를 기반으로 참조하고 아이디는 logger 로 지정한다. -->
+	<aop:config>
+		<aop:aspect id="logger" ref="commonAOP">
+		<!-- pointcut 의 범위를 지정한다. 해당 범위는 aop 패키지의 모든 클래스에 정의된 메소드에 공통 기능을 적용하겠다는 선언 -->
+			<aop:pointcut expression="within(aop.*)" id="publicMethod"/> <!-- 설정 -->
+		<!-- Advice 는 "around" 타입으로 지정하고 , 그댸 logViewAOP 메소드를 공통 기능으로 사용하겠다는 선언 !  -->
+			<aop:around pointcut-ref="publicMethod"  method="logViewAOP"/> <!-- 방식 -->
+		</aop:aspect>
+	</aop:config>	
+	
+<!-- 
+Advice의 종류
+   
+   before : 메소드 실행 전에 advice 실행
+   after-returning : 정상적으로 메소드 실행 후 advice실행
+   after-throwing : 메소드 실행 중 exception(예외) 발생 시 advice실행
+   after : 메소드 실행 중 exception 발생 여부와 상관없이 advice실행
+   around : 가장 사용빈도가 높음, 메소드 실행 전/후 및 exception발생 시 모두 advice실행
+ -->
+	
+	
+	<!-- VO 빈생성 -->
+	<bean id="student" class="aop.StudentVO">
+		<property name="name" value="현기쨩"/>
+		<property name="age" value="26"/>
+		<property name="major">
+			<value>바둑</value>
+		</property>
+		<property name="gradeNum">
+			<value>1</value>
+		</property>
+	</bean>
+	
+</beans>

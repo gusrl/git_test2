@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+	<!--DispatcherServlet Context :이 서블릿의 요청 처리 인프라를 정의합니다. -->
+	
+	<!-- Spring MVC @Controller 프로그래밍 모델을 가능하게한다. -->
+	<annotation-driven />
+	 
+	<!-- 
+$ {webappRoot} / resources 디렉토리의 정적 리소스를 효율적으로 제공하여 / resources / **에 대한 HTTP GET 요청을 처리합니다. -->
+	<!-- 
+	resources 폴더에 대한 설정 부분 . 주로 이미지나 css, js 와 같은 설정파일들을 저장하는 용도로 사용되며 실제 경호는 "컨텍스트루트/src/webapp/resources" 이다.
+	views 하위 폴더에서 접근할때는 아래 매핑된 정보와같이 " ./resources/파일명 "  혹은 "./common/파일명" 으로 하면된다.
+	 -->  
+	<resources mapping="/resources/**" location="/resources/" />
+	<!-- resources 폴더의 매핑정보를 common으로 추가함 
+		views 하위 폴더에서 "./common/파일명" 으로 접근 -->
+	<resources mapping="/common/**" location="/resources/" />
+	
+	<!-- SpringMVC 로 요청이 들어오면 제일먼져 DispatcherServlet 이 요청을 받는다. 그리고 아래 ㅅㄹ정된 
+	기본 패키지를 검색 (scan) 후 @Controller 어노테이션이 붙어있는 클래스를 컨트롤러로 인식하고 요청명에 
+	해당하는 메소드를 찾아서 실행한다. -->
+
+	<!-- 어 내가 지금 컨트롤러를 찾으러 왔는데 어 베이스 페키지는 여기니깐 여기부터 찾아 라는얘기야. dispatcher servlet 이 제일먼져 scan 해   -->
+	<context:component-scan base-package="com.kosmo.K08Spring" /> <!-- 이건 경우에 따라서 많아질수 있어. -->
+	<context:component-scan base-package="springBoard.controller" /> <!-- 
+	Spring 비회원제 답변형 게시판에서 사용할 컨트롤러 위치 추가지정함 
+	DispatcherServlet 은 지금부터는 요청이 들어왔을때 기본패키지와 해당패키지를 동시에 검색하게된다.
+	-->
+	<!-- spring JDBC 를 사용하기 위한 빈 생성 . 해당  XML 파일에서 JDBC 연결에 관련된 빈을 생성한후 컨트롤러에서 자동주입 받는다. -->
+	<beans:bean name="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<beans:property name="driverClassName" value="oracle.jdbc.OracleDriver"/>
+		<beans:property name="url" value="jdbc:oracle:thin:@localhost:1521:orcl"/>
+		<beans:property name="username" value="kosmo"/>
+		<beans:property name="password" value="1234"/>
+	</beans:bean>	
+	<beans:bean name = "template" class="org.springframework.jdbc.core.JdbcTemplate">
+		<beans:property name="dataSource" ref="dataSource"/>
+	</beans:bean>
+	
+	<!-- 
+		Mybatis 이용한 방명록 제작 1 차 버전 
+		: JDBCTemplate 을 이용한 빈생성 
+	 -->
+	<beans:bean name ="myDao" class="mybatis.MyBoardDAO"> 
+		<beans:property name="template" ref="template"/>
+	</beans:bean>
+	
+	<!-- 
+	Mybatis 이용한 방명록 제작 2 차버전 
+	: Mybatis 로 컨버팅 하기 
+	 -->
+	 <beans:bean id = "sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+	 	<beans:property name="dataSource" ref="dataSource"/>
+	 	<beans:property name="mapperLocations" value="classpath:mybatis/mapper/*.xml"/>
+	 </beans:bean>
+	 <beans:bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+	 	<beans:constructor-arg index="0" ref="sqlSessionFactory"/>
+	 </beans:bean>
+		
+	<!-- Resolves views selected for rendering by @Controllers to .jsp resources in the /WEB-INF/views directory -->
+	
+	<!-- 컨트롤러에서 비즈니스 로직을 수행한후 view 를 호출하면 viewResolver 가 해당뷰의 경로를 조립한다.즉,
+	
+	
+		[prefix]                         [suffix]
+		"/WEB-INF/views/"+ controller반환값 +".jsp"
+		위와같이 조립한후 웹브라우저에 해당 View 를 로드한다.
+		컨트롤러는 view 를 호출하기전에 출력할 내용을 
+		model 에 저장하게된다.
+	
+	 -->	
+	
+	<!--얘가 하는역할은  -->
+	<beans:bean class="org.springframework.web.servlet.view.InternalResourceViewResolver"> 
+	<!-- 얘랑 -->
+		<beans:property name="prefix" value="/WEB-INF/views/" /> 
+	<!-- 얘랑 컨트롤 에서 받은 문자열 중간에서 받아서 완성된 경로를 만드는거야 -->	
+		<beans:property name="suffix" value=".jsp" /> 
+	</beans:bean>
+	
+	
+	<!-- 파일 업로드를 위한 빈생성 MultipartResolver 설정 -->
+	<beans:bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+			<!-- 업로드는  1 메가 까지 허용   -->
+		<beans:property name="maxUploadSize" value="1000000"></beans:property>
+	</beans:bean>
+	
+	<!-- 파일 다운로드를 위한 빈생성 -->
+	<beans:bean id = "fileDownloadView" class="common.FileDownloadView"/>
+	<beans:bean id="fileViewResolver" class="org.springframework.web.servlet.view.BeanNameViewResolver" >
+		<beans:property name="order" value="0" />
+	</beans:bean>
+	
+	
+	<!-- 트랜잭션 처리를 위한 빈 생성  -->
+	<!-- 1단계 : 트랜잭션 처리 전 구매하기 -->
+<!-- 	<beans:bean name="TransactionDao" class="transaction.TicketDAO">
+		<beans:property name="template" ref="template"/>
+	</beans:bean> 
+	
+		2단계는 : 트랜잭션 처리후 구매하기 
+-->
+<!-- 
+<beans:bean name="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+	<beans:property name="dataSource" ref="dataSource"/>
+</beans:bean>
+	<beans:bean name="transactionDAO" class="transaction.TicketDAO">
+	<beans:property name="template" ref="template"/>
+	<beans:property name="transactionManager" ref="transactionManager"/>		
+</beans:bean> 
+-->
+	
+	<!-- 트랜잭션3 : 트랜잭션 템플릿 사용하기 -->
+	<beans:bean name="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<beans:property name="dataSource" ref="dataSource"></beans:property>
+	</beans:bean>
+	<beans:bean name ="transactionTemplate" class="org.springframework.transaction.support.TransactionTemplate">
+		<beans:property name="transactionManager" ref="transactionManager"/>
+	</beans:bean>
+	<beans:bean name="TransactionDAO" class="transaction.TicketTplDAO">
+		<beans:property name="template" ref="template"/>
+		<beans:property name="transactionTemplate" ref="transactionTemplate"/>
+	</beans:bean> 
+</beans:beans>

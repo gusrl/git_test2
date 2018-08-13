@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd">
+	<!-- AOP 설정 .공통기능으로 사용할 클래스의 메 소드 지정  -->
+ 
+	<aop:aspectj-autoproxy />
+	<bean id="logAOP" class="aop.CommonAOP2"/>
+	
+	<!-- student 빈 생성  -->
+	<bean id="student" class="aop.StudentVO">
+		<property name="name" value="현기쨩"/>
+		<property name="age" value="26"/>
+		<property name="major">
+			<value>바둑</value>
+		</property>
+		<property name="gradeNum">
+			<value>1</value>
+		</property>
+	</bean>
+
+</beans>
